@@ -14,6 +14,7 @@ if torch.cuda.is_available():
     print('cuda gpu available')
     device = torch.device("cuda")
 
+print('just a test')
 
 if torch.torch.backends.mps.is_available():
     print('mac gpu available')
