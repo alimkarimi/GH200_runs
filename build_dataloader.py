@@ -7,7 +7,8 @@ from PIL import Image
 import random
 
 ### Create data_loader ###
- 
+
+
 root_train = 'train_orig/'
 root_val = 'val_orig/'
 catNms=['airplane','bus','cat', 'dog', 'pizza']

@@ -10,6 +10,14 @@ from sklearn.metrics import ConfusionMatrixDisplay
 
 import matplotlib.pyplot as plt
 
+if torch.cuda.is_available():
+    print('cuda gpu available')
+    device = torch.device("cuda")
+
+
+if torch.torch.backends.mps.is_available():
+    print('mac gpu available')
+
 class HW4Net(nn.Module):
     def __init__(self):
         super(HW4Net, self).__init__()
@@ -117,7 +125,7 @@ def test_HW4Net():
     disp.ax_.set_title("Confusion Matrix for CNN 1")
     plt.show()
     plt.savefig('CM_CNN1')
-    
+
 if __name__ == "__main__":
     train_HW4Net()
     test_HW4Net()
