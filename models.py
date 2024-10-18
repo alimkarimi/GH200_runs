@@ -35,13 +35,75 @@ class HW4Net(nn.Module):
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return x
+
+class CNN_padded(nn.Module):
+    def __init__(self):
+        super(CNN_padded, self).__init__()
+        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
+        self.fc1 = nn.Linear(8192,64)
+        self.fc2 = nn.Linear(64, 5)
     
-def train_HW4Net():
-    net1 = HW4Net()
-    net1 = net1.to(device)
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(x.shape[0], -1)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+class ResCNN(nn.Module):
+    def __init__(self):
+        super(ResCNN, self).__init__()
+        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(16, 32, 3, padding = 1)
+        self.conv3 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv4 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv5 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv6 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv7 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv8 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv9 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv10 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv11 = nn.Conv2d(32, 32, 3, padding=1)
+        self.conv12 = nn.Conv2d(32, 32, 3, padding=1)
+        
+        self.fc1 = nn.Linear(2048,64)
+        self.fc2 = nn.Linear(64, 5)
+    
+    def forward(self, x): #we are passing in a torch.float32 into the network with a shape 12, 3, 64, 64
+        
+        x = self.pool(F.relu(self.conv1(x)))
+        
+        x = self.pool(F.relu(self.conv2(x)))
+        
+        x = self.pool(F.relu(self.conv3(x)))
+        
+        x = F.relu(self.conv4(x))
+        
+        x = F.relu(self.conv5(x))
+        
+        x = F.relu(self.conv6(x))
+        x = F.relu(self.conv7(x))
+        x = F.relu(self.conv8(x))
+        x = F.relu(self.conv9(x))
+        x = F.relu(self.conv10(x))
+        x = F.relu(self.conv11(x))
+        x = F.relu(self.conv12(x))            
+        x = x.view(x.shape[0], -1)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+
+        return x
+    
+def train_model(model):
+    
+    model = model.to(device)
     loss_running_list_net1 = []
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(net1.parameters(), lr = 1e-3, betas = (0.9, 0.99))
+    optimizer = torch.optim.Adam(model.parameters(), lr = 1e-3, betas = (0.9, 0.99))
     epochs = 10
     for epoch in range(epochs):
         running_loss = 0.0
@@ -51,7 +113,7 @@ def train_HW4Net():
             labels = labels.to(device)
             optimizer.zero_grad() #Sets gradients of all model parameters to zero. We want to compute fresh gradients
             #based on the new forward run. 
-            outputs = net1(inputs)
+            outputs = model(inputs)
             loss = criterion(outputs, labels) #compute cross-entropy loss
             loss.backward() #compute derivative of loss wrt each gradient. 
             optimizer.step() #takes a step on hyperplane based on derivatives
@@ -65,11 +127,13 @@ def train_HW4Net():
         with torch.no_grad():
             for n, data in enumerate(my_val_dataloader):
                 images, labels = data
-                outputs = net1(images)
+                images = images.to(device)
+                labels = labels.to(device)
+                outputs = model(images)
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0) #add to total's total
                 for n, i in enumerate(labels):
-                    temp = np.array(i) #temp holds the one hot encoded label
+                    temp = np.array(i.cpu()) #temp holds the one hot encoded label
                     idx = np.argmax(temp) #get the argmax of the encoded label - will be a value between 0 and 4.
                     #print(idx)
                     if idx == predicted[n]: #if the predicted value and label match
@@ -77,9 +141,9 @@ def train_HW4Net():
 
         print('Accuracy of the network on the val images: %d %%' % (
             100 * correct / total))
-        
+    return model  # trained model
 
-def test_HW4Net():
+def test_model(trained_model):
     ### Test performance of CNN 1 on val data ###
     correct = 0
     total = 0
@@ -96,7 +160,7 @@ def test_HW4Net():
         for n, data in enumerate(my_val_dataloader):
             images, labels = data
 
-            outputs = net1(images)
+            outputs = trained_model(images)
 
             _, predicted = torch.max(outputs.data, 1) 
 
@@ -131,6 +195,13 @@ def test_HW4Net():
     plt.savefig('CM_CNN1')
 
 if __name__ == "__main__":
-    train_HW4Net()
-    test_HW4Net()
+    cnn_model_init = ResCNN()
+    trained_model = train_model(cnn_model_init)
+    trained_model = trained_model.to("cpu")
+    test_model(trained_model)
+
+    # cnn_padded_model_init = CNN_padded()
+    # trained_model = train_model(cnn_padded_model_init)
+    # trained_model = trained_model.to("cpu")
+    # test_model(trained_model)
     
