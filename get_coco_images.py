@@ -6,7 +6,14 @@ import PIL
 from PIL import Image
 import os
 import pathlib
+from argparse import ArgumentParser
 
+parser = ArgumentParser(description="Select which dataset to pull")
+parser.add_argument('-train', type=bool, help='Download training images from COCO', default=False)
+parser.add_argument('-val', type = bool, help='Download validation images from COCO', default=False)
+
+args = parser.parse_args()
+print(args)
 
 def display_categories():
     dataType='train2014'
@@ -24,7 +31,7 @@ def display_categories():
     return coco
 
 def get_training_images():
-    catNms=['airplane','bus','cat', 'dog', 'pizza']
+    catNms=['airplane','bus','cat', 'dog', 'pizza']#'bicycle', 'tv', 'book', 'toothbrush', 'bat', 'surfboard', 'hot dog']
     catIds = coco.getCatIds(catNms=catNms); #get a list category ids for each category name 
     ###Create training data set ###
     for n, cat_id in enumerate(catIds): ##for each category id
@@ -39,10 +46,17 @@ def get_training_images():
     #     jpg file names
     #     print('list of files in d', d)
         for img in d: #iterate through list of downloaded images. Resize them to 64 x 64.
+            
+            try:
+                temp_img = Image.open('train_orig/' + catNms[n] + '/' + img) #open image
+                temp_img = temp_img.resize((64,64)) #resize
+                save_path = 'train/' + catNms[n] + '/' # Create the folder if it doesn't exist
+                os.makedirs(save_path, exist_ok=True)  # Create the folder if it doesn't exist
+                temp_img.save(fp = save_path + 'resized_' + img) #overwrite image with the 64 x 64 version
+            except OSError:
+                print(f'failed on {save_path, img}')
 
-            temp_img = Image.open('train_orig/' + catNms[n] + '/' + img) #open image
-            temp_img = temp_img.resize((64,64)) #resize
-            temp_img.save(fp = 'train_orig/' + catNms[n] + '/' + img) #overwrite image with the 64 x 64 version
+                
             ## save function parameters:
     #         fp – A filename (string), pathlib.Path object or file object.
     #         format – Optional format override. If omitted, the format to use is determined from the 
@@ -51,7 +65,7 @@ def get_training_images():
 
 def get_validation_images():
     ###Create validation dataset ###
-    catNms=['airplane','bus','cat', 'dog', 'pizza']
+    catNms=['airplane','bus','cat', 'dog', 'pizza']# 'bicycle', 'tv', 'book', 'toothbrush', 'bat', 'surfboard', 'hot dog']
     catIds = coco.getCatIds(catNms=catNms); #get a list category ids for each category name 
     for n, cat_id in enumerate(catIds): ##for each category id
         print('in category id:,',cat_id)
@@ -64,15 +78,25 @@ def get_validation_images():
     #     jpg file names
     #     print('list of files in d', d)
         for img in d: #iterate through list of downloaded images. Resize them to 64 x 64. 
-            temp_img = Image.open('val_orig/' + catNms[n] + '/' + img) #open image
-            temp_img = temp_img.resize((64,64)) #resize
-            temp_img.save(fp = 'val_orig/' + catNms[n] + '/' + img) #overwrite image with the 64 x 64 version
-            ### save function parameters:
-            #fp – A filename (string), pathlib.Path object or file object.
-            #format – Optional format override. If omitted, the format to use is determined from the 
-            ###filename extension.
-            #If a file object was used instead of a filename, this parameter should always be used.
+            try:
+                    temp_img = Image.open('val_orig/' + catNms[n] + '/' + img) #open image
+                    temp_img = temp_img.resize((64,64)) #resize
+                    save_path = 'val/' + catNms[n] + '/' # Create the folder if it doesn't exist
+                    os.makedirs(save_path, exist_ok=True)  # Create the folder if it doesn't exist
+                    temp_img.save(fp = save_path + 'resized_' + img) #overwrite image with the 64 x 64 version
+            except OSError:
+                print(f'failed on {save_path, img}')
+                ### save function parameters:
+                #fp – A filename (string), pathlib.Path object or file object.
+                #format – Optional format override. If omitted, the format to use is determined from the 
+                ###filename extension.
+                #If a file object was used instead of a filename, this parameter should always be used.
 
 if __name__ == "__main__":
     coco = display_categories()
-    #get_validation_images()
+    if args.train:
+        print('this is args.train', args.train)
+        get_training_images()
+    if args.val:
+        print('this is args.val', args.val)
+        get_validation_images()
