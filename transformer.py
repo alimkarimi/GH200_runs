@@ -23,19 +23,21 @@ class PatchEmbed(nn.Module): #Note, from Meta DINO ViT code ()
         B, C, H, W = x.shape
         y = self.proj(x)
         #print('conv output before flattening and transpose', y.shape)
-        x = self.proj(x).flatten(2).transpose(1, 2)
+        x = self.proj(x).flatten(2).transpose(1, 2) # takes the output of the convolution, flattens the last two dims 
         return x
     
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class MasterEncoder(nn.Module):
-    def __init__(self, max_seq_length, embedding_size, how_many_basic_encoders, num_atten_heads):
+    def __init__(self, max_seq_length, embedding_size, how_many_basic_encoders, num_atten_heads, batch_size):
         super().__init__()
-        self.class_embedding = nn.Parameter(torch.rand(size = (1, 1, embedding_size))) #create class embedding.
+        self.batch_size = batch_size
+        self.patch_generator = PatchEmbed()
+
+        self.class_embedding = nn.Parameter(torch.rand(size = (batch_size, 1, embedding_size))) #create class embedding.
         #this class_embedding will be the first row of the embedding matrix, where axis 0 is each patch embedding
         #Note that the first 1 in the size parameter above corresponds to the batch size. 
-        self.pos_embedding = nn.Parameter(torch.rand(size = (1, max_seq_length, embedding_size)))
-        self.patch_generator = PatchEmbed()
+        self.pos_embedding = nn.Parameter(torch.rand(size = (batch_size, max_seq_length, embedding_size)))
         self.max_seq_length = max_seq_length
         self.basic_encoder_arr = nn.ModuleList([BasicEncoder(
             max_seq_length, embedding_size, num_atten_heads) for _ in range(how_many_basic_encoders)])  # (A)
@@ -50,10 +52,10 @@ class MasterEncoder(nn.Module):
         img_embedding = img_embedding + self.pos_embedding
         for i in range(len(self.basic_encoder_arr)):  # (B)
             img_embedding = self.basic_encoder_arr[i](img_embedding)
-        
 
-        img_embedding = self.mlp_head(img_embedding[0,0,:]) #use the class embedding vector to do the prediction.
-        #here, we take the 100-dimension embedding to 5d, so we can get log probabilities and then do NLLLoss
+        img_embedding = self.mlp_head(img_embedding[:,0,:]) # extract the class embedding vector across entire batch. This will
+        # get fed into the loss computation.
+        #here, we take the n-dimension embedding to 5d, so we can get log probabilities and then do NLLLoss
         # all using CE loss in the training loop. 
         return img_embedding
 
