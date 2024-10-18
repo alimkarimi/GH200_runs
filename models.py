@@ -10,7 +10,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 
 import matplotlib.pyplot as plt
 
-from transformer import MasterEncoder
+from transformer import MasterEncoder, PatchEmbed
 
 if torch.cuda.is_available():
     print('cuda gpu available')
@@ -143,6 +143,9 @@ def train_model(model, epochs = 10):
             optimizer.zero_grad() #Sets gradients of all model parameters to zero. We want to compute fresh gradients
             #based on the new forward run. 
             outputs = model(inputs)
+            # if outputs.shape != labels.shape:
+            #     labels = labels.squeeze()
+
             loss = criterion(outputs, labels) #compute cross-entropy loss
             loss.backward() #compute derivative of loss wrt each gradient. 
             optimizer.step() #takes a step on hyperplane based on derivatives
@@ -223,21 +226,39 @@ def test_model(trained_model):
     plt.show()
     plt.savefig('CM_CNN1')
 
+def get_num_params(model):
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f"Total number of parameters in model: {total_params}")
+
 if __name__ == "__main__":
     # cnn_model_init = ResCNN()
     # trained_model = train_model(cnn_model_init)
     # trained_model = trained_model.to("cpu")
     # test_model(trained_model)
+    # Code to run CNN:
 
+    """Code to run CNN: """
     # cnn_padded_model_init = CNN_padded()
+
+    # total_params = sum(p.numel() for p in cnn_padded_model_init.parameters())
+    # print(f"Total number of parameters in model: {total_params}")
     # trained_model = train_model(cnn_padded_model_init)
     # trained_model = trained_model.to("cpu")
     # test_model(trained_model)
 
+    """Code for patch embedding"""
+    # conv_init = PatchEmbed()
+    # for n, (img, label) in enumerate(my_train_dataloader):
+    #     out = conv_init(img)
+
+    """Code to run Transformer:"""
+    batch_size = my_train_dataloader.batch_size
     transformer_init  = MasterEncoder(max_seq_length=17, 
                                  embedding_size=512,
                                  how_many_basic_encoders=4, 
-                                 num_atten_heads=8)
+                                 num_atten_heads=4, batch_size = batch_size)
+    
+    get_num_params(transformer_init)
     
     trained_transformer = train_model(transformer_init)
     trained_transformer.to("cpu")
