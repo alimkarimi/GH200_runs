@@ -75,4 +75,4 @@ def get_validation_images():
 
 if __name__ == "__main__":
     coco = display_categories()
-    get_validation_images()
+    #get_validation_images()
