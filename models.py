@@ -10,6 +10,8 @@ from sklearn.metrics import ConfusionMatrixDisplay
 
 import matplotlib.pyplot as plt
 
+from transformer import MasterEncoder
+
 if torch.cuda.is_available():
     print('cuda gpu available')
     device = torch.device("cuda")
@@ -98,13 +100,40 @@ class ResCNN(nn.Module):
 
         return x
     
-def train_model(model):
+
+# criterion = nn.CrossEntropyLoss()
+# loss_running_list_encoder = []
+# running_loss = 0.0
+# for i in range(epochs):
+#     for n, data in enumerate(my_train_dataloader):
+#         #Create encoder network:
+#         #print(n)
+#         optimizer.zero_grad() #Sets gradients of all model parameters to zero. We want to compute fresh gradients
+#         #based on the new forward run. 
+#         img, GT = data
+#         GT = torch.argmax(GT)
+
+#         img = img.to(device)
+#         GT = GT.to(device)
+        
+#         out = encoder(img)
+#         loss = criterion(out, GT) #input, then target for arg order
+        
+#         loss.backward() #compute derivative of loss wrt each gradient. 
+#         optimizer.step() #takes a step on hyperplane based on derivatives
+#         running_loss += loss.item() 
+#         if (n+1) % 500 == 0:
+#             print("[epoch: %d, batch: %5d] loss: %3f" % (i + 1, n + 1, running_loss / 500))
+#             loss_running_list_encoder.append(running_loss/500)
+#             running_loss = 0.0
+    
+def train_model(model, epochs = 10):
     
     model = model.to(device)
     loss_running_list_net1 = []
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr = 1e-3, betas = (0.9, 0.99))
-    epochs = 10
+    epochs = epochs
     for epoch in range(epochs):
         running_loss = 0.0
         for i, data in enumerate(my_train_dataloader):
@@ -195,13 +224,23 @@ def test_model(trained_model):
     plt.savefig('CM_CNN1')
 
 if __name__ == "__main__":
-    cnn_model_init = ResCNN()
-    trained_model = train_model(cnn_model_init)
-    trained_model = trained_model.to("cpu")
-    test_model(trained_model)
+    # cnn_model_init = ResCNN()
+    # trained_model = train_model(cnn_model_init)
+    # trained_model = trained_model.to("cpu")
+    # test_model(trained_model)
 
     # cnn_padded_model_init = CNN_padded()
     # trained_model = train_model(cnn_padded_model_init)
     # trained_model = trained_model.to("cpu")
     # test_model(trained_model)
+
+    transformer_init  = MasterEncoder(max_seq_length=17, 
+                                 embedding_size=512,
+                                 how_many_basic_encoders=4, 
+                                 num_atten_heads=8)
+    
+    trained_transformer = train_model(transformer_init)
+    trained_transformer.to("cpu")
+    test_model(trained_transformer)
+
     
