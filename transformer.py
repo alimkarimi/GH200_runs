@@ -29,10 +29,11 @@ class PatchEmbed(nn.Module): #Note, from Meta DINO ViT code ()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 class MasterEncoder(nn.Module):
-    def __init__(self, max_seq_length, embedding_size, how_many_basic_encoders, num_atten_heads, batch_size):
+    def __init__(self, max_seq_length, embedding_size, how_many_basic_encoders, num_atten_heads, batch_size, patch_size):
         super().__init__()
+        self.model_name = "Transformer"
         self.batch_size = batch_size
-        self.patch_generator = PatchEmbed()
+        self.patch_generator = PatchEmbed(embed_dim=embedding_size, patch_size=patch_size)
 
         self.class_embedding = nn.Parameter(torch.rand(size = (batch_size, 1, embedding_size))) #create class embedding.
         #this class_embedding will be the first row of the embedding matrix, where axis 0 is each patch embedding
