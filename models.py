@@ -13,11 +13,11 @@ import matplotlib.pyplot as plt
 if torch.cuda.is_available():
     print('cuda gpu available')
     device = torch.device("cuda")
-
-print('just a test')
+else:
+    device = torch.device("cpu")
 
 if torch.torch.backends.mps.is_available():
-    print('mac gpu available')
+    device = torch.device("mps")
 
 class HW4Net(nn.Module):
     def __init__(self):
@@ -38,6 +38,7 @@ class HW4Net(nn.Module):
     
 def train_HW4Net():
     net1 = HW4Net()
+    net1 = net1.to(device)
     loss_running_list_net1 = []
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(net1.parameters(), lr = 1e-3, betas = (0.9, 0.99))
@@ -46,6 +47,8 @@ def train_HW4Net():
         running_loss = 0.0
         for i, data in enumerate(my_train_dataloader):
             inputs, labels = data
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             optimizer.zero_grad() #Sets gradients of all model parameters to zero. We want to compute fresh gradients
             #based on the new forward run. 
             outputs = net1(inputs)
