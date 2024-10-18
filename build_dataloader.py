@@ -9,8 +9,8 @@ import random
 ### Create data_loader ###
 
 
-root_train = 'train_orig/'
-root_val = 'val_orig/'
+root_train = 'train/'
+root_val = 'val/'
 catNms=['airplane','bus','cat', 'dog', 'pizza']
 
 class MyDataset(torch.utils.data.Dataset):
