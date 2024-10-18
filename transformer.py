@@ -152,4 +152,3 @@ class AttentionHead(nn.Module):
         Z = coeff * Z  # (T)
         return Z
     
-    
