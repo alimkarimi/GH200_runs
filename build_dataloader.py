@@ -14,8 +14,9 @@ root_val = 'val_orig/'
 catNms=['airplane','bus','cat', 'dog', 'pizza']
 
 class MyDataset(torch.utils.data.Dataset):
-    def __init__(self, root, catNms):
+    def __init__(self, root, catNms, val : bool):
         super(MyDataset).__init__()
+        self.val = val
         self.root = {} #dictionary for main directory which holds all the images of a category
         self.filenames = {} #dictionary for filenames of a given category
         for cat in catNms:
@@ -38,13 +39,14 @@ class MyDataset(torch.utils.data.Dataset):
                                 3: torch.tensor(np.array([0, 0, 0, 1, 0])),
                                 4: torch.tensor(np.array([0, 0, 0, 0, 1]))} #one hot encode each category. 
 
-        
-        self.to_Tensor_and_Norm = tvt.Compose([tvt.ToTensor(),tvt.Resize((64,64)) , 
-                                        tvt.Normalize([0], [1]) ,  tvt.ColorJitter(0.75, 0.75) , 
-                                        tvt.RandomHorizontalFlip( p = 0.75), 
-                                        tvt.RandomRotation(degrees = 45)]) #normalize and resize in case the resize op 
-#         wasn't done. Note that resizing here may not have any impact as the resizing was done previously.  
-
+        if self.val == False: # we are training, then we want to do data augmentation
+            self.to_Tensor_and_Norm = tvt.Compose([tvt.ToTensor(),tvt.Resize((64,64)) , 
+                                            tvt.Normalize([0], [1]) ,  tvt.ColorJitter(0.75, 0.75) , 
+                                            tvt.RandomHorizontalFlip( p = 0.75), 
+                                            tvt.RandomRotation(degrees = 45)]) #normalize and resize in case the resize op 
+    #         wasn't done. Note that resizing here may not have any impact as the resizing was done previously.  
+        if self.val == True: # do not do augmentation in validation.
+            self.to_Tensor_and_Norm = tvt.Compose([tvt.ToTensor(),tvt.Resize((64,64)), tvt.Normalize([0], [1])]) 
 
     def __len__(self):
         count = 0
@@ -82,19 +84,19 @@ class MyDataset(torch.utils.data.Dataset):
         return img, class_label
     
 #instantiate objects for train and val datasets.  
-my_train_dataset = MyDataset(root_train, catNms)
+my_train_dataset = MyDataset(root_train, catNms, val=False)
 print(len(my_train_dataset))
 index = 3
 print(my_train_dataset[index][0].shape, my_train_dataset[index][1])
-my_val_dataset = MyDataset(root_val, catNms)
+my_val_dataset = MyDataset(root_val, catNms, val = True)
 print(len(my_val_dataset))
 print(my_val_dataset[index][0].shape, my_val_dataset[index][1])
 
 # Use MyDataset class in PyTorches DataLoader functionality
-my_train_dataloader = torch.utils.data.DataLoader(my_train_dataset, batch_size=12, num_workers = 4, drop_last=False)
-my_val_dataloader = torch.utils.data.DataLoader(my_val_dataset, batch_size = 12, num_workers = 4, drop_last = False)
-for n, batch in enumerate(my_train_dataloader):
-#     #Note: each batch is a list of length 2. The first is a pytorch tensor B x C x H x W and the 
-#     #second is a pytorch tensor of length B with the associated class labels of each image in the 
-#     #first item of the list!
-    print('batch is', n)
+my_train_dataloader = torch.utils.data.DataLoader(my_train_dataset, batch_size=32, num_workers = 8, drop_last=False)
+my_val_dataloader = torch.utils.data.DataLoader(my_val_dataset, batch_size = 32, num_workers = 8, drop_last = False)
+# for n, batch in enumerate(my_train_dataloader):
+# #     #Note: each batch is a list of length 2. The first is a pytorch tensor B x C x H x W and the 
+# #     #second is a pytorch tensor of length B with the associated class labels of each image in the 
+# #     #first item of the list!
+#     print('batch is', n)
