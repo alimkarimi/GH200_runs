@@ -24,6 +24,7 @@ if torch.torch.backends.mps.is_available():
 class HW4Net(nn.Module):
     def __init__(self):
         super(HW4Net, self).__init__()
+        self.model_name = 'Basic CNN'
         self.conv1 = nn.Conv2d(3, 16, 3)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(16, 32, 3)
@@ -58,6 +59,7 @@ class CNN_padded(nn.Module):
 class ResCNN(nn.Module):
     def __init__(self):
         super(ResCNN, self).__init__()
+        self.model_name = "ResCNN"
         self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(16, 32, 3, padding = 1)
@@ -127,7 +129,7 @@ class ResCNN(nn.Module):
 #             loss_running_list_encoder.append(running_loss/500)
 #             running_loss = 0.0
     
-def train_model(model, epochs = 10):
+def train_model(model, epochs = 20):
     
     model = model.to(device)
     loss_running_list_net1 = []
@@ -173,6 +175,17 @@ def train_model(model, epochs = 10):
 
         print('Accuracy of the network on the val images: %d %%' % (
             100 * correct / total))
+
+        # print out loss curve for training:
+        ### Plot training loss for CNN1 and CNN2 ###
+    
+    plt.plot(loss_running_list_net1, label = model.model_name)
+
+    plt.xlabel('batch * 100')
+    plt.ylabel('loss')
+    plt.title(f'Training loss for {model.model_name} over {epochs} Epochs')
+    plt.legend()
+    plt.savefig('Training_loss.jpg')
     return model  # trained model
 
 def test_model(trained_model):
@@ -191,6 +204,8 @@ def test_model(trained_model):
     with torch.no_grad():
         for n, data in enumerate(my_val_dataloader):
             images, labels = data
+            images = images.to(device)
+            labels = labels.to(device)
 
             outputs = trained_model(images)
 
@@ -199,12 +214,12 @@ def test_model(trained_model):
             total += labels.size(0) #add to total count of ground truth images so we can calculate total accuracy
             #print("total images in val set", total)
             for n, i in enumerate(labels):
-                temp = np.array(i) #arrays are one hot encoded, we need to convert it into a human readable label for
+                temp = np.array(i.cpu()) #arrays are one hot encoded, we need to convert it into a human readable label for
                 #display in the confusion matrix
                 label_arg = np.argmax(temp) #get the argument of the one hot encoding
                 y_label.append(mapping[label_arg]) #apply the argument to the mapping dictionary above. For example
                 # if the argument is 3, then, that corresponds to a label of dog in the mapping dictionary
-                t = int(np.array(predicted[n])) #get integer representation of prediction from network (will 
+                t = int(np.array(predicted[n].cpu())) #get integer representation of prediction from network (will 
                 #be an int from 0 to 4. 
                 y_pred.append(mapping[t]) #append the predicted output of this label to the prediction list, but, 
                 #via the mapping dictionary definition so that the y_pred list is human readable. 
@@ -222,9 +237,9 @@ def test_model(trained_model):
     confusion_matrix=confusion_matrix(y_true, y_pred, labels = [ "airplane", "bus", "cat", "dog", "pizza"])
     disp = ConfusionMatrixDisplay(confusion_matrix, display_labels = [ "airplane", "bus", "cat", "dog", "pizza"])
     disp.plot()
-    disp.ax_.set_title("Confusion Matrix for CNN 1")
+    disp.ax_.set_title(f"Confusion Matrix for {trained_model.model_name}")
     plt.show()
-    plt.savefig('CM_CNN1')
+    plt.savefig(f'CM_{trained_model.model_name}')
 
 def get_num_params(model):
     total_params = sum(p.numel() for p in model.parameters())
@@ -253,15 +268,15 @@ if __name__ == "__main__":
 
     """Code to run Transformer:"""
     batch_size = my_train_dataloader.batch_size
-    transformer_init  = MasterEncoder(max_seq_length=17, 
-                                 embedding_size=512,
+    transformer_init  = MasterEncoder(max_seq_length=65, 
+                                 embedding_size=100,
                                  how_many_basic_encoders=4, 
-                                 num_atten_heads=4, batch_size = batch_size)
+                                 num_atten_heads=4, batch_size = batch_size, patch_size = 8)
     
     get_num_params(transformer_init)
     
     trained_transformer = train_model(transformer_init)
-    trained_transformer.to("cpu")
+    #trained_transformer.to("cpu")
     test_model(trained_transformer)
 
     
