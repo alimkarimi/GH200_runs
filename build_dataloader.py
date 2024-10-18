@@ -93,8 +93,8 @@ print(len(my_val_dataset))
 print(my_val_dataset[index][0].shape, my_val_dataset[index][1])
 
 # Use MyDataset class in PyTorches DataLoader functionality
-my_train_dataloader = torch.utils.data.DataLoader(my_train_dataset, batch_size=32, num_workers = 8, drop_last=False)
-my_val_dataloader = torch.utils.data.DataLoader(my_val_dataset, batch_size = 32, num_workers = 8, drop_last = False)
+my_train_dataloader = torch.utils.data.DataLoader(my_train_dataset, batch_size=32, num_workers = 32, drop_last=True)
+my_val_dataloader = torch.utils.data.DataLoader(my_val_dataset, batch_size = 32, num_workers = 32, drop_last = True)
 # for n, batch in enumerate(my_train_dataloader):
 # #     #Note: each batch is a list of length 2. The first is a pytorch tensor B x C x H x W and the 
 # #     #second is a pytorch tensor of length B with the associated class labels of each image in the 
