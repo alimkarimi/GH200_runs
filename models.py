@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 
 from transformer import MasterEncoder, PatchEmbed
 
+import time
+
 if torch.cuda.is_available():
     print('cuda gpu available')
     device = torch.device("cuda")
@@ -101,33 +103,6 @@ class ResCNN(nn.Module):
         x = self.fc2(x)
 
         return x
-    
-
-# criterion = nn.CrossEntropyLoss()
-# loss_running_list_encoder = []
-# running_loss = 0.0
-# for i in range(epochs):
-#     for n, data in enumerate(my_train_dataloader):
-#         #Create encoder network:
-#         #print(n)
-#         optimizer.zero_grad() #Sets gradients of all model parameters to zero. We want to compute fresh gradients
-#         #based on the new forward run. 
-#         img, GT = data
-#         GT = torch.argmax(GT)
-
-#         img = img.to(device)
-#         GT = GT.to(device)
-        
-#         out = encoder(img)
-#         loss = criterion(out, GT) #input, then target for arg order
-        
-#         loss.backward() #compute derivative of loss wrt each gradient. 
-#         optimizer.step() #takes a step on hyperplane based on derivatives
-#         running_loss += loss.item() 
-#         if (n+1) % 500 == 0:
-#             print("[epoch: %d, batch: %5d] loss: %3f" % (i + 1, n + 1, running_loss / 500))
-#             loss_running_list_encoder.append(running_loss/500)
-#             running_loss = 0.0
     
 def train_model(model, epochs = 20):
     
@@ -246,37 +221,44 @@ def get_num_params(model):
     print(f"Total number of parameters in model: {total_params}")
 
 if __name__ == "__main__":
-    # cnn_model_init = ResCNN()
-    # trained_model = train_model(cnn_model_init)
-    # trained_model = trained_model.to("cpu")
-    # test_model(trained_model)
-    # Code to run CNN:
-
-    """Code to run CNN: """
-    # cnn_padded_model_init = CNN_padded()
-
-    # total_params = sum(p.numel() for p in cnn_padded_model_init.parameters())
-    # print(f"Total number of parameters in model: {total_params}")
-    # trained_model = train_model(cnn_padded_model_init)
-    # trained_model = trained_model.to("cpu")
-    # test_model(trained_model)
-
-    """Code for patch embedding"""
-    # conv_init = PatchEmbed()
-    # for n, (img, label) in enumerate(my_train_dataloader):
-    #     out = conv_init(img)
+    torch.manual_seed(42)  # Set a fixed seed for the CPU
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(42)  # Set a fixed seed for all GPUs
 
     """Code to run Transformer:"""
     batch_size = my_train_dataloader.batch_size
-    transformer_init  = MasterEncoder(max_seq_length=65, 
-                                 embedding_size=100,
-                                 how_many_basic_encoders=4, 
-                                 num_atten_heads=4, batch_size = batch_size, patch_size = 8)
+
+    start_time_model_init = time.time()
+
+    transformer_init  = MasterEncoder(max_seq_length=17, 
+                                 embedding_size=512,
+                                 how_many_basic_encoders=8, 
+                                 num_atten_heads=4, batch_size = batch_size, patch_size = 16)
+
+    end_time_model_init = time.time()
     
+    start_time_count_params = time.time()
     get_num_params(transformer_init)
     
+    end_time_count_params = time.time()
+
+    start_time_model_training = time.time()
+
     trained_transformer = train_model(transformer_init)
-    #trained_transformer.to("cpu")
+
+    end_time_model_training = time.time()
+
+    start_time_model_test = time.time()
     test_model(trained_transformer)
+
+    end_time_model_test = time.time()
+
+    print('Runtime Performance Analysis:')
+    print(f"Total time to initialize model params: {(end_time_model_init - start_time_model_init):.2f} seconds")
+    print(f"Total time to count model params: {(end_time_count_params - start_time_count_params):.2f} seconds")
+    print(f"Total time to train model: {(end_time_model_training - start_time_model_training):.2f} seconds ({(end_time_model_training - start_time_model_training) / 60:.2f} minutes)")
+    print(f"Total time to test model: {(end_time_model_test - start_time_model_test):.2f} seconds")
+
+    print(f"Total time end to end: {(end_time_model_test - start_time_model_init):.2f} seconds ({(end_time_model_test - start_time_model_init) / 60:.2f} minutes)")
 
     
