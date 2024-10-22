@@ -24,3 +24,6 @@ Once images are downloaded, you can train and test the model using:
 
 python3 models.py
 
+# Video demo of training and testing model: 
+https://www.youtube.com/watch?v=68EcNX74C1Y
+
