@@ -9,20 +9,21 @@ This is so that hardware and software are able to communicate with eachother. Th
 - Nvidia Driver versioning - 550.54.15
 
 You will also need PyTorch 2.4 and build it from wheel using:
+```pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124```
 
-pip install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124
 
 Once you have the relevant packages installed, you can run the following commands to get the images downloaded:
 
-wget http://images.cocodataset.org/annotations/annotations_trainval2014.zip
+```wget http://images.cocodataset.org/annotations/annotations_trainval2014.zip```
 
-unzip annotation_trainval2014.zip
+```unzip annotation_trainval2014.zip```
 
-python3 get_coco_images.py -train=True -val=True
+```python3 get_coco_images.py -train=True -val=True```
+
 
 Once images are downloaded, you can train and test the model using:
 
-python3 models.py
+```python3 models.py```
 
 # Video demo of training and testing model: 
 https://www.youtube.com/watch?v=68EcNX74C1Y
